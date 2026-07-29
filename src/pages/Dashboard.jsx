@@ -58,6 +58,8 @@ const Dashboard = () => {
                 <h3 style={{ margin: 0, color: '#111827', fontSize: '28px', fontWeight: 'bold' }}>{value}</h3>
             </div>
         </div>
+        </Link>
+    );
     if (loading) {
         return <Loader size="large" />;
     }
