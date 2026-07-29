@@ -1,0 +1,12 @@
+{
+  "rewrites": [
+    {
+      "source": "/images/:folder/:filename",
+      "destination": "https://qfmlelswaluwtmndsadz.supabase.co/storage/v1/object/public/sigma-media/:folder/:filename"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ]
+}
