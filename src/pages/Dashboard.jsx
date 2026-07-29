@@ -61,8 +61,28 @@ const Dashboard = () => {
         </Link>
     );
 
+    if (loading) {
+        return (
+            <div>
+                <div style={{ marginBottom: '32px' }}>
+                    <div style={{ height: '32px', width: '250px', backgroundColor: '#e5e7eb', borderRadius: '8px', marginBottom: '8px', animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite' }}></div>
+                    <div style={{ height: '20px', width: '400px', backgroundColor: '#e5e7eb', borderRadius: '6px', animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite' }}></div>
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '24px', marginBottom: '32px' }}>
+                    {[1, 2, 3, 4].map(i => (
+                        <div key={i} style={{ height: '108px', backgroundColor: '#e5e7eb', borderRadius: '16px', animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite' }}></div>
+                    ))}
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
+                    <div style={{ height: '300px', backgroundColor: '#e5e7eb', borderRadius: '16px', animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite' }}></div>
+                    <div style={{ height: '300px', backgroundColor: '#e5e7eb', borderRadius: '16px', animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite' }}></div>
+                </div>
+            </div>
+        );
+    }
+
     return (
-        <div style={{ opacity: loading ? 0.6 : 1, transition: 'opacity 0.3s ease' }}>
+        <div>
             <div style={{ marginBottom: '32px' }}>
                 <h1 style={{ fontSize: '28px', fontWeight: 'bold', color: '#1f2937', margin: '0 0 8px 0' }}>Dashboard Overview</h1>
                 <p style={{ color: '#6b7280', margin: 0, fontSize: '15px' }}>Welcome back. Here is what's happening with your content today.</p>
