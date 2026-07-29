@@ -1,13 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { Package, FileText, Mail, Users, ArrowRight } from 'lucide-react';
 import { IMG } from '../api/constants';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import api from '../api/axios';
 import Loader from '../components/Loader';
 
 const Dashboard = () => {
     const [stats, setStats] = useState(null);
     const [loading, setLoading] = useState(true);
+
+    const location = useLocation();
+    const justLoggedIn = location.state?.justLoggedIn;
 
     useEffect(() => {
         const fetchStats = async () => {
@@ -22,8 +25,6 @@ const Dashboard = () => {
         };
         fetchStats();
     }, []);
-
-    // Removed early loader to prevent double S loader flash
 
     const StatCard = ({ title, value, icon, bgColor, iconColor, linkTo }) => (
         <Link to={linkTo} style={{ textDecoration: 'none', display: 'block' }}>
@@ -60,7 +61,27 @@ const Dashboard = () => {
         </div>
         </Link>
     );
+
     if (loading) {
+        if (justLoggedIn) {
+            return (
+                <div>
+                    <div style={{ marginBottom: '32px' }}>
+                        <div style={{ height: '32px', width: '250px', backgroundColor: '#e5e7eb', borderRadius: '8px', marginBottom: '8px', animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite' }}></div>
+                        <div style={{ height: '20px', width: '400px', backgroundColor: '#e5e7eb', borderRadius: '6px', animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite' }}></div>
+                    </div>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '24px', marginBottom: '32px' }}>
+                        {[1, 2, 3, 4].map(i => (
+                            <div key={i} style={{ height: '108px', backgroundColor: '#e5e7eb', borderRadius: '16px', animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite' }}></div>
+                        ))}
+                    </div>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
+                        <div style={{ height: '300px', backgroundColor: '#e5e7eb', borderRadius: '16px', animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite' }}></div>
+                        <div style={{ height: '300px', backgroundColor: '#e5e7eb', borderRadius: '16px', animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite' }}></div>
+                    </div>
+                </div>
+            );
+        }
         return <Loader size="large" />;
     }
 

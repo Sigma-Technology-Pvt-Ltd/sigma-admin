@@ -33,7 +33,7 @@ const Login = () => {
 
             if (response.data.result === 'success' && response.data.token) {
                 localStorage.setItem('adminToken', response.data.token);
-                navigate('/dashboard');
+                navigate('/dashboard', { state: { justLoggedIn: true } });
             } else {
                 setError(response.data.message || 'Login failed');
             }
