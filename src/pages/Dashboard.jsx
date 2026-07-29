@@ -23,7 +23,7 @@ const Dashboard = () => {
         fetchStats();
     }, []);
 
-    if (loading) return <Loader size="large" />;
+    // Removed early loader to prevent double S loader flash
 
     const StatCard = ({ title, value, icon, bgColor, iconColor, linkTo }) => (
         <Link to={linkTo} style={{ textDecoration: 'none', display: 'block' }}>
@@ -62,7 +62,7 @@ const Dashboard = () => {
     );
 
     return (
-        <div>
+        <div style={{ opacity: loading ? 0.6 : 1, transition: 'opacity 0.3s ease' }}>
             <div style={{ marginBottom: '32px' }}>
                 <h1 style={{ fontSize: '28px', fontWeight: 'bold', color: '#1f2937', margin: '0 0 8px 0' }}>Dashboard Overview</h1>
                 <p style={{ color: '#6b7280', margin: 0, fontSize: '15px' }}>Welcome back. Here is what's happening with your content today.</p>
