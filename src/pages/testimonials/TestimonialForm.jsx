@@ -31,7 +31,7 @@ const TestimonialForm = () => {
             const fetchTestimonial = async () => {
                 try {
                     const res = await api.get('/admin/testimonials');
-                    const current = res.data.data.find(t => t.id === parseInt(id));
+                    const current = res.data.data.find(t => Number(t.id) === Number(id));
                     if (current) {
                         setFormData({
                             fullName: current.fullName || '',
@@ -76,13 +76,9 @@ const TestimonialForm = () => {
 
         try {
             if (isEdit) {
-                await api.put(`/admin/testimonials/${id}`, data, {
-                    headers: { 'Content-Type': 'multipart/form-data' }
-                });
+                await api.put(`/admin/testimonials/${id}`, data);
             } else {
-                await api.post('/admin/testimonials', data, {
-                    headers: { 'Content-Type': 'multipart/form-data' }
-                });
+                await api.post('/admin/testimonials', data);
             }
             navigate('/dashboard/testimonials');
         } catch (error) {

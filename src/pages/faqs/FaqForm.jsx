@@ -33,7 +33,7 @@ const FaqForm = () => {
                 
                 if (isEdit) {
                     const res = await api.get('/admin/faqs');
-                    const current = res.data.data.find(f => f.id === parseInt(id));
+                    const current = res.data.data.find(f => Number(f.id) === Number(id));
                     if (current) {
                         setFormData({
                             typeId: current.typeId || '',

@@ -23,7 +23,8 @@ const CategoryForm = () => {
         seoTitle: '',
         seoDescription: '',
         parentCategory: '',
-        status: 1
+        status: 1,
+        order: 0
     });
     
     const [imageFile, setImageFile] = useState(null);
@@ -45,14 +46,15 @@ const CategoryForm = () => {
         const fetchCategory = async () => {
             try {
                 const res = await api.get('/admin/categories');
-                const current = res.data.data.find(c => c.id === parseInt(id));
+                const current = res.data.data.find(c => Number(c.id) === Number(id));
                 if (current) {
                     setFormData({
                         title: current.title,
                         seoTitle: current.seoTitle || '',
                         seoDescription: current.seoDescription || '',
                         parentCategory: current.parentCategory || '',
-                        status: current.status
+                        status: current.status,
+                        order: current.order || 0
                     });
                 }
             } catch (err) {
@@ -88,6 +90,7 @@ const CategoryForm = () => {
         data.append('seoTitle', formData.seoTitle);
         data.append('seoDescription', formData.seoDescription);
         data.append('status', formData.status);
+        data.append('order', formData.order);
         if (formData.parentCategory) {
             data.append('parentCategory', formData.parentCategory);
         }
@@ -136,6 +139,7 @@ const CategoryForm = () => {
                         
                         <FormInput label="Title" name="title" value={formData.title} onChange={handleChange} required />
                         <FormTextarea label="Summary" name="summary" value={formData.summary} onChange={handleChange} rows="2" />
+                        <FormInput type="number" label="Display Order" name="order" value={formData.order} onChange={handleChange} />
                         <FormSelect label="Status" name="status" value={formData.status} onChange={handleChange}>
                             <option value={1}>Active</option>
                             <option value={0}>Inactive</option>

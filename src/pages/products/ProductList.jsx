@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import SectionTabs from '../../components/SectionTabs';
-import { Link } from 'react-router-dom';
+import { Link, useOutletContext } from 'react-router-dom';
 import { Plus } from 'lucide-react';
 import api from '../../api/axios';
 import Table from '../../components/Table';
@@ -8,6 +8,7 @@ import Table from '../../components/Table';
 import Loader from '../../components/Loader';
 import { IMG } from '../../api/constants';
 const ProductList = () => {
+    const { searchQuery } = useOutletContext() || {};
     const [products, setProducts] = useState([]);
     const [categories, setCategories] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -41,6 +42,17 @@ const ProductList = () => {
             }
         }
     };
+
+    const filteredProducts = products.filter((p) => {
+        if (!searchQuery) return true;
+        const query = searchQuery.toLowerCase().trim();
+        const cat = categories.find((c) => Number(c.id) === Number(p.categoryId));
+        return (
+            p.title?.toLowerCase().includes(query) ||
+            p.id?.toString().includes(query) ||
+            (cat && cat.title?.toLowerCase().includes(query))
+        );
+    });
 
     const columns = [
         { header: 'ID', accessor: 'id' },
@@ -82,7 +94,7 @@ const ProductList = () => {
             ) : (
                 <Table 
                     columns={columns} 
-                    data={products} 
+                    data={filteredProducts} 
                     editUrlPattern={(row) => `/dashboard/products/${row.id}/edit`}
                     onDelete={handleDelete}
                 />

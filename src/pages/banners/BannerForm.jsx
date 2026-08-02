@@ -39,7 +39,7 @@ const BannerForm = () => {
             const fetchBanner = async () => {
                 try {
                     const res = await api.get('/admin/banners');
-                    const current = res.data.data.find(b => b.id === parseInt(id));
+                    const current = res.data.data.find(b => Number(b.id) === Number(id));
                     if (current) {
                         setFormData({
                             title: current.title || '',
@@ -84,13 +84,9 @@ const BannerForm = () => {
 
         try {
             if (isEdit) {
-                await api.put(`/admin/banners/${id}`, data, {
-                    headers: { 'Content-Type': 'multipart/form-data' }
-                });
+                await api.put(`/admin/banners/${id}`, data);
             } else {
-                await api.post('/admin/banners', data, {
-                    headers: { 'Content-Type': 'multipart/form-data' }
-                });
+                await api.post('/admin/banners', data);
             }
             navigate('/dashboard/banners');
         } catch (error) {

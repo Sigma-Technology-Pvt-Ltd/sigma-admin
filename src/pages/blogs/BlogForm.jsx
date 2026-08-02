@@ -11,7 +11,7 @@ import FormInput from '../../components/ui/FormInput';
 import FormSelect from '../../components/ui/FormSelect';
 import FormTextarea from '../../components/ui/FormTextarea';
 import FormButton from '../../components/ui/FormButton';
-import { FRONTEND_URL } from '../../api/constants';
+import { FRONTEND_URL, getAdminFrontendUrl } from '../../api/constants';
 const BlogForm = () => {
     const { id } = useParams();
     const isEdit = !!id;
@@ -39,7 +39,7 @@ const BlogForm = () => {
                 
                 if (isEdit) {
                     const res = await api.get('/admin/blogs');
-                    const current = res.data.data.find(b => b.id === parseInt(id));
+                    const current = res.data.data.find(b => Number(b.id) === Number(id));
                     if (current) {
                         setFormData({
                             title: current.title || '',
@@ -92,13 +92,9 @@ const BlogForm = () => {
 
         try {
             if (isEdit) {
-                await api.put(`/admin/blogs/${id}`, data, {
-                    headers: { 'Content-Type': 'multipart/form-data' }
-                });
+                await api.put(`/admin/blogs/${id}`, data);
             } else {
-                await api.post('/admin/blogs', data, {
-                    headers: { 'Content-Type': 'multipart/form-data' }
-                });
+                await api.post('/admin/blogs', data);
             }
             navigate('/dashboard/blogs');
         } catch (error) {
@@ -123,7 +119,8 @@ const BlogForm = () => {
             const res = await api.post('/admin/preview', data, {
                 headers: { 'Content-Type': 'multipart/form-data' }
             });
-            window.open(`${FRONTEND_URL}/preview/blog/${res.data.previewId}`, '_blank');
+            const frontendUrl = getAdminFrontendUrl();
+            window.open(`${frontendUrl}/preview/blog/${res.data.previewId}`, '_blank');
         } catch (err) {
             alert('Failed to generate preview');
         }

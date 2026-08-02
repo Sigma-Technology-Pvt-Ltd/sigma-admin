@@ -33,7 +33,7 @@ const DownloadForm = () => {
                 
                 if (isEdit) {
                     const res = await api.get('/admin/downloads');
-                    const current = res.data.data.find(d => d.id === parseInt(id));
+                    const current = res.data.data.find(d => Number(d.id) === Number(id));
                     if (current) {
                         setFormData({
                             title: current.title || '',
@@ -81,13 +81,9 @@ const DownloadForm = () => {
 
         try {
             if (isEdit) {
-                await api.put(`/admin/downloads/${id}`, data, {
-                    headers: { 'Content-Type': 'multipart/form-data' }
-                });
+                await api.put(`/admin/downloads/${id}`, data);
             } else {
-                await api.post('/admin/downloads', data, {
-                    headers: { 'Content-Type': 'multipart/form-data' }
-                });
+                await api.post('/admin/downloads', data);
             }
             navigate('/dashboard/downloads');
         } catch (error) {

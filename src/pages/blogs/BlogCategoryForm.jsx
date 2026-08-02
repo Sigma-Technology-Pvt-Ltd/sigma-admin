@@ -32,7 +32,7 @@ const BlogCategoryForm = () => {
             const fetchCategory = async () => {
                 try {
                     const res = await api.get('/admin/blog-categories');
-                    const current = res.data.data.find(c => c.id === parseInt(id));
+                    const current = res.data.data.find(c => Number(c.id) === Number(id));
                     if (current) {
                         setFormData({
                             title: current.title || '',
@@ -79,13 +79,9 @@ const BlogCategoryForm = () => {
 
         try {
             if (isEdit) {
-                await api.put(`/admin/blog-categories/${id}`, data, {
-                    headers: { 'Content-Type': 'multipart/form-data' }
-                });
+                await api.put(`/admin/blog-categories/${id}`, data);
             } else {
-                await api.post('/admin/blog-categories', data, {
-                    headers: { 'Content-Type': 'multipart/form-data' }
-                });
+                await api.post('/admin/blog-categories', data);
             }
             navigate('/dashboard/blog-categories');
         } catch (error) {

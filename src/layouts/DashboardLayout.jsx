@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Outlet, Navigate, NavLink, useNavigate } from 'react-router-dom';
 import { LayoutDashboard, Package, FileText, Image as ImageIcon, Grid, MessageSquare, HelpCircle, Briefcase, Download, Mail, Users, LogOut, Search, Bell, Trash2 } from 'lucide-react';
 import api from '../api/axios';
@@ -7,6 +7,7 @@ import fullLogo from '../assets/sigma-logo-transparent.png';
 const DashboardLayout = () => {
     const token = localStorage.getItem('adminToken');
     const navigate = useNavigate();
+    const [searchQuery, setSearchQuery] = useState('');
 
     // Redirect to login if not authenticated
     if (!token) {
@@ -81,7 +82,13 @@ const DashboardLayout = () => {
                     {/* Search */}
                     <div style={{ display: 'flex', alignItems: 'center', backgroundColor: '#f4f7fe', padding: '8px 16px', borderRadius: '24px', width: '300px' }}>
                         <Search size={18} color="#9ca3af" />
-                        <input type="text" placeholder="Search..." style={{ border: 'none', backgroundColor: 'transparent', outline: 'none', marginLeft: '8px', width: '100%', color: '#4b5563' }} />
+                        <input 
+                            type="text" 
+                            placeholder="Search products, categories..." 
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            style={{ border: 'none', backgroundColor: 'transparent', outline: 'none', marginLeft: '8px', width: '100%', color: '#4b5563' }} 
+                        />
                     </div>
 
                     <div style={{ display: 'flex', alignItems: 'center', gap: '24px' }}>
@@ -99,7 +106,7 @@ const DashboardLayout = () => {
 
                 {/* Page Content */}
                 <div style={{ padding: '24px', flex: 1, overflowY: 'auto' }}>
-                    <Outlet />
+                    <Outlet context={{ searchQuery, setSearchQuery }} />
                 </div>
             </main>
         </div>

@@ -11,7 +11,7 @@ import FormInput from '../../components/ui/FormInput';
 import FormSelect from '../../components/ui/FormSelect';
 import FormTextarea from '../../components/ui/FormTextarea';
 import FormButton from '../../components/ui/FormButton';
-import { FRONTEND_URL } from '../../api/constants';
+import { FRONTEND_URL, getAdminFrontendUrl } from '../../api/constants';
 const CareerForm = () => {
     const { id } = useParams();
     const isEdit = !!id;
@@ -37,7 +37,7 @@ const CareerForm = () => {
             const fetchInitialData = async () => {
                 try {
                     const res = await api.get('/admin/careers');
-                    const current = res.data.data.find(c => c.id === parseInt(id));
+                    const current = res.data.data.find(c => Number(c.id) === Number(id));
                     if (current) {
                         setFormData({
                             title: current.title || '',
@@ -85,13 +85,9 @@ const CareerForm = () => {
 
         try {
             if (isEdit) {
-                await api.put(`/admin/careers/${id}`, data, {
-                    headers: { 'Content-Type': 'multipart/form-data' }
-                });
+                await api.put(`/admin/careers/${id}`, data);
             } else {
-                await api.post('/admin/careers', data, {
-                    headers: { 'Content-Type': 'multipart/form-data' }
-                });
+                await api.post('/admin/careers', data);
             }
             navigate('/dashboard/careers');
         } catch (error) {
@@ -109,7 +105,8 @@ const CareerForm = () => {
             const res = await api.post('/admin/preview', data, {
                 headers: { 'Content-Type': 'multipart/form-data' }
             });
-            window.open(`${FRONTEND_URL}/preview/career/${res.data.previewId}`, '_blank');
+            const frontendUrl = getAdminFrontendUrl();
+            window.open(`${frontendUrl}/preview/career/${res.data.previewId}`, '_blank');
         } catch (err) {
             alert('Failed to generate preview');
         }

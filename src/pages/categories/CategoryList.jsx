@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import SectionTabs from '../../components/SectionTabs';
-import { Link } from 'react-router-dom';
+import { Link, useOutletContext } from 'react-router-dom';
 import { Plus } from 'lucide-react';
 import api from '../../api/axios';
 import Table from '../../components/Table';
@@ -8,6 +8,7 @@ import Table from '../../components/Table';
 import Loader from '../../components/Loader';
 import { IMG } from '../../api/constants';
 const CategoryList = () => {
+    const { searchQuery } = useOutletContext() || {};
     const [categories, setCategories] = useState([]);
     const [loading, setLoading] = useState(true);
 
@@ -36,6 +37,15 @@ const CategoryList = () => {
             }
         }
     };
+
+    const filteredCategories = categories.filter((c) => {
+        if (!searchQuery) return true;
+        const query = searchQuery.toLowerCase().trim();
+        return (
+            c.title?.toLowerCase().includes(query) ||
+            c.id?.toString().includes(query)
+        );
+    });
 
     const columns = [
         { header: 'ID', accessor: 'id' },
@@ -77,7 +87,7 @@ const CategoryList = () => {
             ) : (
                 <Table 
                     columns={columns} 
-                    data={categories} 
+                    data={filteredCategories} 
                     editUrlPattern={(row) => `/dashboard/categories/${row.id}/edit`}
                     onDelete={handleDelete}
                 />
