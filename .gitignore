@@ -15,6 +15,18 @@ dist-ssr
 .env.*
 *.sql
 
+# Test and Maintenance scripts
+test_*.js
+test_*.ts
+test_*.jsx
+test_*.tsx
+cleanup_*.js
+clear_*.js
+seed_*.js
+run_*.js
+temp_*
+tmp_*
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
