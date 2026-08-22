@@ -3,6 +3,7 @@ import api from '../api/axios';
 
 const SECTIONS = [
     { key: 'products', label: 'Products', icon: '📦' },
+    { key: 'tickets', label: 'Service Tickets', icon: '🎫' },
     { key: 'blogs', label: 'Blogs', icon: '📝' },
     { key: 'careers', label: 'Careers', icon: '💼' },
     { key: 'categories', label: 'Categories', icon: '🗂️' },

@@ -25,6 +25,8 @@ import DownloadForm from './pages/downloads/DownloadForm';
 import ContactList from './pages/contacts/ContactList';
 import SubscriberList from './pages/subscribers/SubscriberList';
 import CleanupPage from './pages/CleanupPage';
+import AgentList from './pages/agents/AgentList';
+import TicketOverview from './pages/tickets/TicketOverview';
 
 function App() {
   return (
@@ -87,6 +89,10 @@ function App() {
 
           {/* Data Cleanup Tool */}
           <Route path="cleanup" element={<CleanupPage />} />
+
+          {/* ─── Ticketing System ─── */}
+          <Route path="agents" element={<AgentList />} />
+          <Route path="tickets" element={<TicketOverview />} />
         </Route>
 
         {/* Catch all */}

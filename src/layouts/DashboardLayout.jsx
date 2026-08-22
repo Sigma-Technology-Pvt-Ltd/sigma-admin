@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Outlet, Navigate, NavLink, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Package, FileText, Image as ImageIcon, Grid, MessageSquare, HelpCircle, Briefcase, Download, Mail, Users, LogOut, Search, Bell, Trash2 } from 'lucide-react';
+import { LayoutDashboard, Package, FileText, Image as ImageIcon, Grid, MessageSquare, HelpCircle, Briefcase, Download, Mail, Users, LogOut, Search, Bell, Trash2, Ticket, UserCheck } from 'lucide-react';
 import api from '../api/axios';
 import fullLogo from '../assets/sigma-logo-transparent.png';
 
@@ -39,6 +39,9 @@ const DashboardLayout = () => {
         { name: 'Contact Submissions', icon: <Mail size={20} />, path: '/dashboard/contacts' },
         { name: 'Subscribers', icon: <Users size={20} />, path: '/dashboard/subscribers' },
         { name: 'Data Cleanup', icon: <Trash2 size={20} />, path: '/dashboard/cleanup' },
+        { name: '— Ticketing ———————', icon: null, path: null, isSection: true },
+        { name: 'Ticket Overview', icon: <Ticket size={20} />, path: '/dashboard/tickets' },
+        { name: 'Agent Management', icon: <UserCheck size={20} />, path: '/dashboard/agents' },
     ];
 
     return (
@@ -50,27 +53,36 @@ const DashboardLayout = () => {
                 </div>
                 
                 <nav style={{ flex: 1, padding: '20px 0', overflowY: 'auto' }}>
-                    {sidebarLinks.map((link) => (
-                        <NavLink
-                            key={link.name}
-                            to={link.path}
-                            end
-                            style={({ isActive }) => ({
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '12px',
-                                padding: '12px 20px',
-                                textDecoration: 'none',
-                                color: isActive ? '#6d28d9' : '#6b7280',
-                                backgroundColor: isActive ? '#f3f0ff' : 'transparent',
-                                borderLeft: isActive ? '4px solid #6d28d9' : '4px solid transparent',
-                                fontWeight: isActive ? '600' : '500',
-                            })}
-                        >
-                            {link.icon}
-                            <span>{link.name}</span>
-                        </NavLink>
-                    ))}
+                    {sidebarLinks.map((link) => {
+                        if (link.isSection) {
+                            return (
+                                <div key={link.name} style={{ padding: '16px 20px 6px', fontSize: '10px', fontWeight: '700', color: '#d1d5db', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+                                    Support
+                                </div>
+                            );
+                        }
+                        return (
+                            <NavLink
+                                key={link.name}
+                                to={link.path}
+                                end
+                                style={({ isActive }) => ({
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '12px',
+                                    padding: '12px 20px',
+                                    textDecoration: 'none',
+                                    color: isActive ? '#6d28d9' : '#6b7280',
+                                    backgroundColor: isActive ? '#f3f0ff' : 'transparent',
+                                    borderLeft: isActive ? '4px solid #6d28d9' : '4px solid transparent',
+                                    fontWeight: isActive ? '600' : '500',
+                                })}
+                            >
+                                {link.icon}
+                                <span>{link.name}</span>
+                            </NavLink>
+                        );
+                    })}
                 </nav>
             </aside>
 
