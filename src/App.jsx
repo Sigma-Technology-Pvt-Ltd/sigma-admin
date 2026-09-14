@@ -53,6 +53,7 @@ function App() {
           <Route path="banners" element={<BannerList />} />
           <Route path="banners/create" element={<BannerForm />} />
           <Route path="banners/edit/:id" element={<BannerForm />} />
+          <Route path="banners/:id/edit" element={<BannerForm />} />
 
           {/* Blogs & Categories */}
           <Route path="blogs" element={<BlogList />} />

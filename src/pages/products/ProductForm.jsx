@@ -29,7 +29,8 @@ const ProductForm = () => {
         seoDescription: '',
         price: '',
         salePrice: '',
-        specification: ''
+        specification: '',
+        badge: ''
     });
     
     // EDIT mode: uploaded downloads fetched from server
@@ -86,7 +87,8 @@ const ProductForm = () => {
                         seoDescription: current.seoDescription || '',
                         price: current.price || '',
                         salePrice: current.salePrice || '',
-                        specification: current.specification || ''
+                        specification: current.specification || '',
+                        badge: (current.orderStatus === 1 || current.order_status === 1) ? 'Sold Out' : (current.type || '')
                     });
                 }
             } catch (err) {
@@ -258,6 +260,18 @@ const ProductForm = () => {
         data.append('salePrice', formData.salePrice);
         data.append('specification', formData.specification);
         
+        let typeVal = '';
+        let orderStatusVal = 0;
+        if (formData.badge === 'Sold Out') {
+            orderStatusVal = 1;
+            typeVal = '';
+        } else if (formData.badge) {
+            typeVal = formData.badge;
+            orderStatusVal = 0;
+        }
+        data.append('type', typeVal);
+        data.append('orderStatus', orderStatusVal);
+        
         if (imageFile) {
             data.append('image', imageFile);
         }
@@ -329,6 +343,8 @@ const ProductForm = () => {
         data.append('price', formData.price);
         data.append('salePrice', formData.salePrice);
         data.append('specification', formData.specification);
+        data.append('type', formData.badge === 'Sold Out' ? '' : formData.badge);
+        data.append('orderStatus', formData.badge === 'Sold Out' ? 1 : 0);
         if (imageFile) {
             data.append('image', imageFile);
         } else if (existingProduct?.image) {
@@ -382,11 +398,20 @@ const ProductForm = () => {
                         <FormTextarea label="Specification" name="specification" value={formData.specification} onChange={handleChange} rows="5" />
                     </FormCard>
 
-                    <FormCard title="Product Status">
-                        <FormSelect label="Status" name="status" value={formData.status} onChange={handleChange}>
-                            <option value={1}>Active</option>
-                            <option value={0}>Inactive</option>
-                        </FormSelect>
+                    <FormCard title="Product Status & Badges">
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '16px' }}>
+                            <FormSelect label="Visibility Status" name="status" value={formData.status} onChange={handleChange}>
+                                <option value={1}>Active</option>
+                                <option value={0}>Inactive</option>
+                            </FormSelect>
+                            <FormSelect label="Product Ribbon / Badge" name="badge" value={formData.badge} onChange={handleChange}>
+                                <option value="">None (Standard Product)</option>
+                                <option value="Hot">🔥 Hot</option>
+                                <option value="Promo">🏷️ Promo</option>
+                                <option value="Best Seller">⭐ Best Seller</option>
+                                <option value="Sold Out">🚫 Sold Out</option>
+                            </FormSelect>
+                        </div>
                     </FormCard>
 
                     {/* Collapsible SEO Meta Settings Card */}

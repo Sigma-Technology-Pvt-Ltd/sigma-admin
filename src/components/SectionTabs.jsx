@@ -2,6 +2,17 @@ import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { PlusCircle, List } from 'lucide-react';
 
+const getPluralName = (name) => {
+    if (!name) return '';
+    if (name.toLowerCase().endsWith('category')) {
+        return name.slice(0, -1) + 'ies';
+    }
+    if (name.endsWith('y') && !name.endsWith('ay') && !name.endsWith('ey') && !name.endsWith('oy')) {
+        return name.slice(0, -1) + 'ies';
+    }
+    return name + 's';
+};
+
 const SectionTabs = ({ createPath, listPath, entityName }) => {
     const location = useLocation();
     
@@ -37,7 +48,7 @@ const SectionTabs = ({ createPath, listPath, entityName }) => {
                 }}
             >
                 <List size={18} />
-                View {entityName}s
+                View {getPluralName(entityName)}
             </Link>
         </div>
     );
