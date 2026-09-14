@@ -44,6 +44,11 @@ const ProductForm = () => {
     const [downloadTitle, setDownloadTitle] = useState('');
     const [downloadFile, setDownloadFile] = useState(null);
     
+    // Gallery images state
+    const [galleryImages, setGalleryImages] = useState([]);
+    const [stagedGalleryImages, setStagedGalleryImages] = useState([]);
+    const [galleryUploading, setGalleryUploading] = useState(false);
+
     const [imageFile, setImageFile] = useState(null);
     const [loading, setLoading] = useState(false);
     const [initialLoading, setInitialLoading] = useState(isEdit);
@@ -100,10 +105,20 @@ const ProductForm = () => {
             }
         };
 
+        const fetchGalleryImages = async () => {
+            try {
+                const res = await api.get(`/admin/products/${id}/images`);
+                setGalleryImages(res.data.data || []);
+            } catch (err) {
+                console.error('Failed to fetch gallery images', err);
+            }
+        };
+
         fetchCategories();
         if (isEdit) {
             fetchProduct();
             fetchDownloads();
+            fetchGalleryImages();
         }
     }, [id, isEdit]);
 
@@ -169,6 +184,62 @@ const ProductForm = () => {
         }
     };
 
+    // ── GALLERY IMAGES HANDLERS ────────────────────────────────────────────────
+    // CREATE MODE: stage gallery images locally
+    const handleStageGalleryImages = (e) => {
+        const files = Array.from(e.target.files || []);
+        if (files.length === 0) return;
+        const newStaged = files.map(file => ({
+            file,
+            previewUrl: URL.createObjectURL(file)
+        }));
+        setStagedGalleryImages(prev => [...prev, ...newStaged]);
+        e.target.value = '';
+    };
+
+    const handleRemoveStagedGalleryImage = (index) => {
+        setStagedGalleryImages(prev => {
+            const item = prev[index];
+            if (item && item.previewUrl) URL.revokeObjectURL(item.previewUrl);
+            return prev.filter((_, i) => i !== index);
+        });
+    };
+
+    // EDIT MODE: immediately upload multiple gallery photos
+    const handleUploadGalleryImages = async (e) => {
+        const files = Array.from(e.target.files || []);
+        if (files.length === 0) return;
+        setGalleryUploading(true);
+        const imgData = new FormData();
+        for (const file of files) {
+            imgData.append('images', file);
+        }
+        try {
+            const res = await api.post(`/admin/products/${id}/images`, imgData);
+            setGalleryImages(prev => [...prev, ...(res.data.data || [])]);
+            e.target.value = '';
+        } catch (err) {
+            console.error('Gallery upload failed', err);
+            alert('Failed to upload gallery image(s)');
+        } finally {
+            setGalleryUploading(false);
+        }
+    };
+
+    const handleDeleteGalleryImage = async (imageId) => {
+        if (!window.confirm('Are you sure you want to delete this gallery photo?')) return;
+        setGalleryUploading(true);
+        try {
+            await api.delete(`/admin/products/images/${imageId}`);
+            setGalleryImages(prev => prev.filter(img => img.id !== imageId));
+        } catch (err) {
+            console.error('Failed to delete gallery image', err);
+            alert('Failed to delete gallery image');
+        } finally {
+            setGalleryUploading(false);
+        }
+    };
+
     // ── SUBMIT ─────────────────────────────────────────────────────────────────
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -196,10 +267,24 @@ const ProductForm = () => {
                 await api.put(`/admin/products/${id}`, data);
                 navigate('/dashboard/products');
             } else {
-                // CREATE: save product, then upload any staged downloads
+                // CREATE: save product, then upload any staged gallery photos and staged downloads
                 const res = await api.post('/admin/products', data);
                 const newProductId = res.data?.data?.id || res.data?.id;
 
+                // 1. Upload staged gallery images if any
+                if (newProductId && stagedGalleryImages.length > 0) {
+                    const imgData = new FormData();
+                    for (const s of stagedGalleryImages) {
+                        imgData.append('images', s.file);
+                    }
+                    try {
+                        await api.post(`/admin/products/${newProductId}/images`, imgData);
+                    } catch (imgErr) {
+                        console.error('Failed to upload staged gallery images:', imgErr);
+                    }
+                }
+
+                // 2. Upload staged downloads if any
                 if (newProductId && stagedDownloads.length > 0) {
                     const failures = [];
                     for (const staged of stagedDownloads) {
@@ -427,6 +512,123 @@ const ProductForm = () => {
                             <FormInput type="file" accept="image/*" onChange={handleFileChange} style={{ backgroundColor: 'white' }} />
                             {isEdit && !imageFile && <p style={{ fontSize: '12px', color: '#6b7280', marginTop: '8px' }}>Leave blank to keep existing image</p>}
                         </div>
+                    </FormCard>
+
+                    {/* Product Gallery Photos Section — shown in both CREATE and EDIT mode */}
+                    <FormCard title="Product Gallery Photos (Multiple Photos)">
+                        {isEdit ? (
+                            /* ── EDIT MODE: live upload/delete ── */
+                            <>
+                                <div style={{ marginBottom: '16px' }}>
+                                    <strong style={{ fontSize: '14px', color: '#374151' }}>
+                                        Current Gallery Photos ({galleryImages.length}):
+                                    </strong>
+                                    {galleryImages.length === 0 ? (
+                                        <p style={{ color: '#6b7280', marginTop: '8px', fontSize: '13px' }}>
+                                            No additional gallery photos uploaded yet.
+                                        </p>
+                                    ) : (
+                                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(110px, 1fr))', gap: '12px', marginTop: '12px' }}>
+                                            {galleryImages.map(img => (
+                                                <div key={img.id} style={{ position: 'relative', border: '1px solid #e5e7eb', borderRadius: '8px', overflow: 'hidden', background: '#fff', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
+                                                    <img
+                                                        src={img.url || `${getAdminBackendUrl()}/images/products/${img.filename}`}
+                                                        alt="Gallery Photo"
+                                                        style={{ width: '100%', height: '90px', objectFit: 'cover' }}
+                                                    />
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => handleDeleteGalleryImage(img.id)}
+                                                        disabled={galleryUploading}
+                                                        style={{
+                                                            width: '100%',
+                                                            padding: '5px',
+                                                            background: '#fee2e2',
+                                                            color: '#dc2626',
+                                                            border: 'none',
+                                                            borderTop: '1px solid #fca5a5',
+                                                            cursor: 'pointer',
+                                                            fontSize: '12px',
+                                                            fontWeight: '600'
+                                                        }}
+                                                    >
+                                                        ✕ Delete
+                                                    </button>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+                                <hr style={{ margin: '16px 0', borderColor: '#e5e7eb' }} />
+                                <div>
+                                    <strong style={{ fontSize: '14px', color: '#374151' }}>Upload More Gallery Photos:</strong>
+                                    <p style={{ fontSize: '12px', color: '#6b7280', margin: '4px 0 8px' }}>
+                                        Select one or multiple images at once (JPG, PNG, WebP)
+                                    </p>
+                                    <input
+                                        type="file"
+                                        multiple
+                                        accept="image/*"
+                                        onChange={handleUploadGalleryImages}
+                                        disabled={galleryUploading}
+                                        style={{ padding: '8px', border: '1px solid #e5e7eb', borderRadius: '8px', width: '100%', backgroundColor: 'white' }}
+                                    />
+                                    {galleryUploading && (
+                                        <p style={{ fontSize: '12px', color: '#2563eb', marginTop: '6px', fontWeight: '500' }}>
+                                            ⏳ Uploading and processing images...
+                                        </p>
+                                    )}
+                                </div>
+                            </>
+                        ) : (
+                            /* ── CREATE MODE: stage multiple photos locally ── */
+                            <>
+                                <p style={{ fontSize: '13px', color: '#6b7280', marginBottom: '12px' }}>
+                                    Select multiple gallery photos now — they'll be uploaded automatically when you save the product.
+                                </p>
+                                <input
+                                    type="file"
+                                    multiple
+                                    accept="image/*"
+                                    onChange={handleStageGalleryImages}
+                                    style={{ padding: '8px', border: '1px solid #e5e7eb', borderRadius: '8px', width: '100%', backgroundColor: 'white', marginBottom: '12px' }}
+                                />
+                                {stagedGalleryImages.length > 0 && (
+                                    <div>
+                                        <p style={{ fontSize: '12px', color: '#16a34a', fontWeight: '600', marginBottom: '8px' }}>
+                                            ✓ {stagedGalleryImages.length} gallery photo(s) selected:
+                                        </p>
+                                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(90px, 1fr))', gap: '10px' }}>
+                                            {stagedGalleryImages.map((s, i) => (
+                                                <div key={i} style={{ position: 'relative', border: '1px solid #bbf7d0', borderRadius: '8px', overflow: 'hidden', background: '#f0fdf4' }}>
+                                                    <img
+                                                        src={s.previewUrl}
+                                                        alt={`Staged ${i + 1}`}
+                                                        style={{ width: '100%', height: '80px', objectFit: 'cover' }}
+                                                    />
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => handleRemoveStagedGalleryImage(i)}
+                                                        style={{
+                                                            width: '100%',
+                                                            padding: '3px',
+                                                            background: '#fee2e2',
+                                                            color: '#dc2626',
+                                                            border: 'none',
+                                                            cursor: 'pointer',
+                                                            fontSize: '11px',
+                                                            fontWeight: '600'
+                                                        }}
+                                                    >
+                                                        ✕ Remove
+                                                    </button>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+                            </>
+                        )}
                     </FormCard>
 
                     {/* Downloads Section — shown in both CREATE and EDIT mode */}
