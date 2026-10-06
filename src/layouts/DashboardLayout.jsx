@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Outlet, Navigate, useNavigate, useLocation, Link } from 'react-router-dom';
-import { LayoutDashboard, Package, FileText, Image as ImageIcon, Grid, MessageSquare, HelpCircle, Briefcase, Download, Mail, Users, LogOut, Search, Bell, Trash2, Ticket, UserCheck } from 'lucide-react';
+import { LayoutDashboard, Package, FileText, Image as ImageIcon, Grid, MessageSquare, HelpCircle, Briefcase, Download, Mail, Users, LogOut, Search, Bell, Trash2, Ticket, UserCheck, FileSpreadsheet } from 'lucide-react';
 import api from '../api/axios';
 import fullLogo from '../assets/sigma-logo-transparent.png';
 
@@ -37,7 +37,9 @@ const DashboardLayout = () => {
         { name: 'FAQs', icon: <HelpCircle size={20} />, path: '/dashboard/faqs', base: '/dashboard/faqs' },
         { name: 'Careers', icon: <Briefcase size={20} />, path: '/dashboard/careers', base: '/dashboard/careers' },
         { name: 'Downloads', icon: <Download size={20} />, path: '/dashboard/downloads', base: '/dashboard/downloads' },
-        { name: 'Contact Submissions', icon: <Mail size={20} />, path: '/dashboard/contacts', base: '/dashboard/contacts' },
+        { name: 'Enquiries (Leads)', icon: <Mail size={20} />, path: '/dashboard/enquiries', base: '/dashboard/enquiries' },
+        { name: 'Quotations', icon: <FileSpreadsheet size={20} />, path: '/dashboard/quotations', base: '/dashboard/quotations' },
+        { name: 'Contact Submissions', icon: <MessageSquare size={20} />, path: '/dashboard/contacts', base: '/dashboard/contacts' },
         { name: 'Subscribers', icon: <Users size={20} />, path: '/dashboard/subscribers', base: '/dashboard/subscribers' },
         { name: 'Data Cleanup', icon: <Trash2 size={20} />, path: '/dashboard/cleanup', base: '/dashboard/cleanup' },
         { name: '— Ticketing ———————', icon: null, path: null, isSection: true },

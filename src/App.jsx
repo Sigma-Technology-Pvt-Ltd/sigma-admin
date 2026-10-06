@@ -24,6 +24,9 @@ import DownloadList from './pages/downloads/DownloadList';
 import DownloadForm from './pages/downloads/DownloadForm';
 import ContactList from './pages/contacts/ContactList';
 import SubscriberList from './pages/subscribers/SubscriberList';
+import EnquiryList from './pages/enquiries/EnquiryList';
+import QuotationBuilder from './pages/enquiries/QuotationBuilder';
+import QuotationList from './pages/enquiries/QuotationList';
 import CleanupPage from './pages/CleanupPage';
 import AgentList from './pages/agents/AgentList';
 import TicketOverview from './pages/tickets/TicketOverview';
@@ -87,6 +90,13 @@ function App() {
           {/* Contacts & Subscribers */}
           <Route path="contacts" element={<ContactList />} />
           <Route path="subscribers" element={<SubscriberList />} />
+
+          {/* Customer Enquiries & Quotations */}
+          <Route path="enquiries" element={<EnquiryList />} />
+          <Route path="enquiries/:id/quote" element={<QuotationBuilder />} />
+          <Route path="quotations" element={<QuotationList />} />
+          <Route path="quotations/new" element={<QuotationBuilder />} />
+          <Route path="quotations/:quoteId/edit" element={<QuotationBuilder />} />
 
           {/* Data Cleanup Tool */}
           <Route path="cleanup" element={<CleanupPage />} />
