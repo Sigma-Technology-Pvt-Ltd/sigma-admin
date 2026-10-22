@@ -30,7 +30,8 @@ const ProductForm = () => {
         price: '',
         salePrice: '',
         specification: '',
-        badge: ''
+        badge: '',
+        order: 0
     });
     
     // EDIT mode: uploaded downloads fetched from server
@@ -88,7 +89,8 @@ const ProductForm = () => {
                         price: current.price || '',
                         salePrice: current.salePrice || '',
                         specification: current.specification || '',
-                        badge: (current.orderStatus === 1 || current.order_status === 1) ? 'Sold Out' : (current.type || '')
+                        badge: (current.orderStatus === 1 || current.order_status === 1) ? 'Sold Out' : (current.type || ''),
+                        order: current.order !== undefined && current.order !== null ? current.order : 0
                     });
                 }
             } catch (err) {
@@ -271,6 +273,7 @@ const ProductForm = () => {
         }
         data.append('type', typeVal);
         data.append('orderStatus', orderStatusVal);
+        data.append('order', formData.order !== '' ? formData.order : 0);
         
         if (imageFile) {
             data.append('image', imageFile);
@@ -345,6 +348,7 @@ const ProductForm = () => {
         data.append('specification', formData.specification);
         data.append('type', formData.badge === 'Sold Out' ? '' : formData.badge);
         data.append('orderStatus', formData.badge === 'Sold Out' ? 1 : 0);
+        data.append('order', formData.order !== '' ? formData.order : 0);
         if (imageFile) {
             data.append('image', imageFile);
         } else if (existingProduct?.image) {
@@ -398,8 +402,8 @@ const ProductForm = () => {
                         <FormTextarea label="Specification" name="specification" value={formData.specification} onChange={handleChange} rows="5" />
                     </FormCard>
 
-                    <FormCard title="Product Status & Badges">
-                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '16px' }}>
+                    <FormCard title="Product Status, Badges & Display Order">
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' }}>
                             <FormSelect label="Visibility Status" name="status" value={formData.status} onChange={handleChange}>
                                 <option value={1}>Active</option>
                                 <option value={0}>Inactive</option>
@@ -411,6 +415,15 @@ const ProductForm = () => {
                                 <option value="Best Seller">⭐ Best Seller</option>
                                 <option value="Sold Out">🚫 Sold Out</option>
                             </FormSelect>
+                            <FormInput 
+                                type="number" 
+                                label="Display Sequence (Order)" 
+                                name="order" 
+                                value={formData.order} 
+                                onChange={handleChange} 
+                                placeholder="e.g. 1, 2, 3..." 
+                                helperText="Lower numbers appear first" 
+                            />
                         </div>
                     </FormCard>
 
@@ -685,7 +698,15 @@ const ProductForm = () => {
                                 <hr style={{ margin: '16px 0', borderColor: '#e5e7eb' }} />
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                                     <strong>Upload New File:</strong>
-                                    <FormInput label="Title (optional)" value={downloadTitle} onChange={e => setDownloadTitle(e.target.value)} placeholder="Leave blank to use filename" />
+                                    <div>
+                                        <div style={{ display: 'flex', gap: '8px', marginBottom: '8px', flexWrap: 'wrap' }}>
+                                            <span style={{ fontSize: '12px', color: '#6b7280', alignSelf: 'center' }}>Quick Presets:</span>
+                                            <button type="button" onClick={() => setDownloadTitle('Product Catalog')} style={{ fontSize: '12px', padding: '3px 8px', borderRadius: '4px', border: '1px solid #d1d5db', background: '#f9fafb', cursor: 'pointer' }}>📋 Product Catalog</button>
+                                            <button type="button" onClick={() => setDownloadTitle('User Manual')} style={{ fontSize: '12px', padding: '3px 8px', borderRadius: '4px', border: '1px solid #d1d5db', background: '#f9fafb', cursor: 'pointer' }}>📖 User Manual</button>
+                                            <button type="button" onClick={() => setDownloadTitle('Technical Specifications')} style={{ fontSize: '12px', padding: '3px 8px', borderRadius: '4px', border: '1px solid #d1d5db', background: '#f9fafb', cursor: 'pointer' }}>⚙️ Technical Specs</button>
+                                        </div>
+                                        <FormInput label="Document Title" value={downloadTitle} onChange={e => setDownloadTitle(e.target.value)} placeholder="e.g. Product Catalog, User Manual..." />
+                                    </div>
                                     <input type="file" id="downloadFileInput" accept=".pdf,.doc,.docx,.jpg,.png" onChange={e => setDownloadFile(e.target.files[0])} style={{ padding: '8px', border: '1px solid #e5e7eb', borderRadius: '8px' }} />
                                     <FormButton type="button" onClick={handleDownloadUpload} disabled={!downloadFile} style={{ marginTop: '8px' }}>Upload File</FormButton>
                                 </div>
@@ -710,7 +731,13 @@ const ProductForm = () => {
                                 )}
 
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                                    <FormInput label="Title (optional)" value={stagedTitle} onChange={e => setStagedTitle(e.target.value)} placeholder="Leave blank to use filename" />
+                                    <div style={{ display: 'flex', gap: '8px', marginBottom: '4px', flexWrap: 'wrap' }}>
+                                        <span style={{ fontSize: '12px', color: '#6b7280', alignSelf: 'center' }}>Quick Presets:</span>
+                                        <button type="button" onClick={() => setStagedTitle('Product Catalog')} style={{ fontSize: '12px', padding: '3px 8px', borderRadius: '4px', border: '1px solid #d1d5db', background: '#f9fafb', cursor: 'pointer' }}>📋 Product Catalog</button>
+                                        <button type="button" onClick={() => setStagedTitle('User Manual')} style={{ fontSize: '12px', padding: '3px 8px', borderRadius: '4px', border: '1px solid #d1d5db', background: '#f9fafb', cursor: 'pointer' }}>📖 User Manual</button>
+                                        <button type="button" onClick={() => setStagedTitle('Technical Specifications')} style={{ fontSize: '12px', padding: '3px 8px', borderRadius: '4px', border: '1px solid #d1d5db', background: '#f9fafb', cursor: 'pointer' }}>⚙️ Technical Specs</button>
+                                    </div>
+                                    <FormInput label="Document Title" value={stagedTitle} onChange={e => setStagedTitle(e.target.value)} placeholder="e.g. Product Catalog, User Manual..." />
                                     <input type="file" id="stagedFileInput" accept=".pdf,.doc,.docx,.jpg,.png" onChange={e => setStagedFile(e.target.files[0])} style={{ padding: '8px', border: '1px solid #e5e7eb', borderRadius: '8px' }} />
                                     <FormButton type="button" onClick={handleStageDownload} disabled={!stagedFile} style={{ marginTop: '4px' }}>
                                         + Add to List

@@ -5,7 +5,7 @@ import api from '../../api/axios';
 import Table from '../../components/Table';
 import Loader from '../../components/Loader';
 import { IMG } from '../../api/constants';
-import { ExternalLink, Image as ImageIcon, Home, Info, Globe, ShoppingBag, Layers } from 'lucide-react';
+import { ExternalLink, Image as ImageIcon, Home, Info, Globe, ShoppingBag, Layers, Check, Sparkles, Edit, Upload } from 'lucide-react';
 
 const LIVE_DOMAIN = 'https://sigmatechnologies.com.np';
 
@@ -101,6 +101,107 @@ const BannerList = () => {
     const [categories, setCategories] = useState([]);
     const [loading, setLoading] = useState(true);
     const [selectedTab, setSelectedTab] = useState('all');
+    const [aboutUpdating, setAboutUpdating] = useState(false);
+    const [aboutMessage, setAboutMessage] = useState('');
+
+    const handleSwitchAboutMode = async (targetBanner, newMode) => {
+        if (!targetBanner) return;
+        setAboutUpdating(true);
+        try {
+            let currentConfig = { mode: newMode, images: [] };
+            if (targetBanner.subtitle && targetBanner.subtitle.trim().startsWith('{')) {
+                try {
+                    const parsed = JSON.parse(targetBanner.subtitle);
+                    currentConfig = { ...parsed, mode: newMode };
+                } catch (e) {}
+            } else {
+                currentConfig.mode = newMode;
+            }
+
+            const payload = new FormData();
+            payload.append('title', targetBanner.title || 'About Us — Diamond Showcase');
+            payload.append('type', targetBanner.type || 'About Us Banner');
+            payload.append('links', targetBanner.links || '/about-us');
+            payload.append('subtitle', JSON.stringify(currentConfig));
+            payload.append('clusterConfig', JSON.stringify(currentConfig));
+            payload.append('status', targetBanner.status !== undefined ? targetBanner.status : 1);
+
+            await api.put(`/admin/banners/${targetBanner.id}`, payload);
+            
+            setBanners(prev => prev.map(b => b.id === targetBanner.id ? { ...b, subtitle: JSON.stringify(currentConfig) } : b));
+            setAboutMessage(`Active display mode set to "${newMode === 'cluster' ? 'Multiple Images' : 'Single Graphic PNG'}"!`);
+            setTimeout(() => setAboutMessage(''), 4000);
+        } catch (err) {
+            console.error('Failed to switch About Us mode', err);
+            alert('Failed to switch About Us presentation mode');
+        } finally {
+            setAboutUpdating(false);
+        }
+    };
+
+    const handleQuickUploadSingle = async (targetBanner, file) => {
+        if (!file || !targetBanner) return;
+        setAboutUpdating(true);
+        try {
+            const payload = new FormData();
+            payload.append('title', targetBanner.title || 'About Us — Diamond Showcase');
+            payload.append('type', targetBanner.type || 'About Us Banner');
+            payload.append('links', targetBanner.links || '/about-us');
+            payload.append('subtitle', targetBanner.subtitle || '');
+            payload.append('status', targetBanner.status !== undefined ? targetBanner.status : 1);
+            payload.append('image', file);
+
+            const res = await api.put(`/admin/banners/${targetBanner.id}`, payload);
+            if (res.data?.data) {
+                setBanners(prev => prev.map(b => b.id === targetBanner.id ? { ...b, image: res.data.data.image } : b));
+            }
+            setAboutMessage('Single Graphic Banner updated successfully!');
+            setTimeout(() => setAboutMessage(''), 4000);
+        } catch (err) {
+            console.error('Failed to upload image', err);
+            alert('Failed to upload banner image');
+        } finally {
+            setAboutUpdating(false);
+        }
+    };
+
+    const handleQuickUploadSlot = async (targetBanner, slotIndex, file) => {
+        if (!file || !targetBanner) return;
+        setAboutUpdating(true);
+        try {
+            let currentConfig = { mode: 'cluster', images: [] };
+            if (targetBanner.subtitle && targetBanner.subtitle.trim().startsWith('{')) {
+                try {
+                    currentConfig = JSON.parse(targetBanner.subtitle);
+                } catch (e) {}
+            }
+            if (!currentConfig.images) currentConfig.images = [];
+            while (currentConfig.images.length <= slotIndex) {
+                currentConfig.images.push({ label: `Slot ${currentConfig.images.length + 1}`, position: 'center', scale: 1.45, image: null });
+            }
+
+            const payload = new FormData();
+            payload.append('title', targetBanner.title || 'About Us — Diamond Showcase');
+            payload.append('type', targetBanner.type || 'About Us Banner');
+            payload.append('links', targetBanner.links || '/about-us');
+            payload.append('subtitle', JSON.stringify(currentConfig));
+            payload.append('clusterConfig', JSON.stringify(currentConfig));
+            payload.append('status', targetBanner.status !== undefined ? targetBanner.status : 1);
+            payload.append(`cluster_${slotIndex}`, file);
+
+            const res = await api.put(`/admin/banners/${targetBanner.id}`, payload);
+            if (res.data?.data) {
+                setBanners(prev => prev.map(b => b.id === targetBanner.id ? { ...b, subtitle: res.data.data.subtitle } : b));
+            }
+            setAboutMessage(`Slot ${slotIndex + 1} photo updated!`);
+            setTimeout(() => setAboutMessage(''), 4000);
+        } catch (err) {
+            console.error('Failed to upload slot image', err);
+            alert('Failed to upload slot image');
+        } finally {
+            setAboutUpdating(false);
+        }
+    };
     const navigate = useNavigate();
 
     const fetchData = async () => {
@@ -211,7 +312,7 @@ const BannerList = () => {
                     <div style={{ fontWeight: '600', color: '#1f2937', fontSize: '14px' }}>
                         {row.title || <span style={{ color: '#9ca3af', fontStyle: 'italic' }}>Untitled Banner</span>}
                     </div>
-                    {row.subtitle && (
+                    {row.subtitle && !row.subtitle.trim().startsWith('{') && (
                         <div style={{ fontSize: '12px', color: '#6b7280', marginTop: '2px' }}>
                             {row.subtitle}
                         </div>
@@ -425,6 +526,334 @@ const BannerList = () => {
                     </span>
                 </button>
             </div>
+
+            {selectedTab === 'about' && (() => {
+                const aboutBanner = banners.find(b => getBannerMeta(b.type, b.links).page === 'About Us' || (b.type || '').toLowerCase().includes('about'));
+                let currentMode = 'single';
+                let clusterImages = [];
+                if (aboutBanner?.subtitle && aboutBanner.subtitle.trim().startsWith('{')) {
+                    try {
+                        const parsed = JSON.parse(aboutBanner.subtitle);
+                        if (parsed.mode) currentMode = parsed.mode;
+                        if (Array.isArray(parsed.images)) clusterImages = parsed.images;
+                    } catch (e) {}
+                }
+
+                const slotLabels = [
+                    { title: 'Slot 1: Image 1', sub: 'First Showcase Image' },
+                    { title: 'Slot 2: Image 2', sub: 'Second Showcase Image' },
+                    { title: 'Slot 3: Image 3', sub: 'Third Showcase Image' },
+                    { title: 'Slot 4: Image 4', sub: 'Fourth Showcase Image' },
+                ];
+
+                return (
+                    <div style={{
+                        margin: '16px 0 24px 0',
+                        borderRadius: '16px',
+                        backgroundColor: '#ffffff',
+                        border: '1px solid #e2e8f0',
+                        boxShadow: '0 4px 16px -2px rgba(15, 23, 42, 0.06)',
+                        overflow: 'hidden'
+                    }}>
+                        {/* Card Header */}
+                        <div style={{
+                            padding: '18px 24px',
+                            background: 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)',
+                            borderBottom: '1px solid #e2e8f0',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                            flexWrap: 'wrap',
+                            gap: '12px'
+                        }}>
+                            <div>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                    <h3 style={{ margin: 0, fontSize: '16px', fontWeight: '700', color: '#0f172a' }}>
+                                        About Us Image Display
+                                    </h3>
+                                    <span style={{ 
+                                        display: 'inline-flex', 
+                                        alignItems: 'center', 
+                                        gap: '4px',
+                                        fontSize: '11px', 
+                                        fontWeight: '700', 
+                                        color: '#059669', 
+                                        backgroundColor: '#ecfdf5', 
+                                        padding: '3px 10px', 
+                                        borderRadius: '20px',
+                                        border: '1px solid #a7f3d0'
+                                    }}>
+                                        ● Live On Storefront
+                                    </span>
+                                </div>
+                                <p style={{ margin: '4px 0 0 0', fontSize: '13px', color: '#64748b' }}>
+                                    Choose whether to show a Single Image or Multiple Images on the About Us section.
+                                </p>
+                            </div>
+
+                            {aboutBanner && (
+                                <button
+                                    type="button"
+                                    onClick={() => navigate(`/dashboard/banners/edit/${aboutBanner.id}`)}
+                                    style={{
+                                        padding: '8px 16px',
+                                        backgroundColor: '#6366f1',
+                                        color: '#fff',
+                                        border: 'none',
+                                        borderRadius: '8px',
+                                        fontSize: '13px',
+                                        fontWeight: '600',
+                                        cursor: 'pointer',
+                                        display: 'inline-flex',
+                                        alignItems: 'center',
+                                        gap: '6px'
+                                    }}
+                                >
+                                    <Edit size={14} />
+                                    <span>Open Full Banner Editor</span>
+                                </button>
+                            )}
+                        </div>
+
+                        {/* Success Notification Bar */}
+                        {aboutMessage && (
+                            <div style={{
+                                padding: '10px 24px',
+                                backgroundColor: '#f0fdf4',
+                                borderBottom: '1px solid #bbf7d0',
+                                color: '#16a34a',
+                                fontSize: '13px',
+                                fontWeight: '600',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '8px'
+                            }}>
+                                <Check size={16} />
+                                <span>{aboutMessage}</span>
+                            </div>
+                        )}
+
+                        {/* Interactive Mode Switcher Tabs */}
+                        <div style={{ padding: '24px' }}>
+                            <div style={{
+                                display: 'grid',
+                                gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+                                gap: '16px',
+                                marginBottom: '24px'
+                            }}>
+                                {/* Option 1: Single Graphic PNG */}
+                                <div 
+                                    onClick={() => !aboutUpdating && handleSwitchAboutMode(aboutBanner, 'single')}
+                                    style={{
+                                        padding: '18px 20px',
+                                        borderRadius: '12px',
+                                        border: currentMode === 'single' ? '2px solid #2563eb' : '1px solid #e2e8f0',
+                                        backgroundColor: currentMode === 'single' ? '#eff6ff' : '#f8fafc',
+                                        cursor: aboutUpdating ? 'not-allowed' : 'pointer',
+                                        transition: 'all 0.2s',
+                                        position: 'relative'
+                                    }}
+                                >
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: '700', fontSize: '15px', color: currentMode === 'single' ? '#1d4ed8' : '#1e293b' }}>
+                                            <span>🖼️ Single Image</span>
+                                        </div>
+                                        {currentMode === 'single' && (
+                                            <span style={{ 
+                                                fontSize: '11px', 
+                                                fontWeight: '700', 
+                                                color: '#2563eb', 
+                                                backgroundColor: '#dbeafe', 
+                                                padding: '3px 8px', 
+                                                borderRadius: '12px' 
+                                            }}>
+                                                ✓ ACTIVE MODE
+                                            </span>
+                                        )}
+                                    </div>
+                                    <p style={{ margin: 0, fontSize: '12px', color: '#64748b', lineHeight: '1.4' }}>
+                                        Display a single image for the About Us section.
+                                    </p>
+                                </div>
+
+                                {/* Option 2: Multiple Images */}
+                                <div 
+                                    onClick={() => !aboutUpdating && handleSwitchAboutMode(aboutBanner, 'cluster')}
+                                    style={{
+                                        padding: '18px 20px',
+                                        borderRadius: '12px',
+                                        border: currentMode === 'cluster' ? '2px solid #2563eb' : '1px solid #e2e8f0',
+                                        backgroundColor: currentMode === 'cluster' ? '#eff6ff' : '#f8fafc',
+                                        cursor: aboutUpdating ? 'not-allowed' : 'pointer',
+                                        transition: 'all 0.2s',
+                                        position: 'relative'
+                                    }}
+                                >
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: '700', fontSize: '15px', color: currentMode === 'cluster' ? '#1d4ed8' : '#1e293b' }}>
+                                            <span>🗂️ Multiple Images</span>
+                                        </div>
+                                        {currentMode === 'cluster' && (
+                                            <span style={{ 
+                                                fontSize: '11px', 
+                                                fontWeight: '700', 
+                                                color: '#2563eb', 
+                                                backgroundColor: '#dbeafe', 
+                                                padding: '3px 8px', 
+                                                borderRadius: '12px' 
+                                            }}>
+                                                ✓ ACTIVE MODE
+                                            </span>
+                                        )}
+                                    </div>
+                                    <p style={{ margin: 0, fontSize: '12px', color: '#64748b', lineHeight: '1.4' }}>
+                                        Display multiple separate images for the About Us section.
+                                    </p>
+                                </div>
+                            </div>
+
+                            {/* Active Mode Quick Actions */}
+                            {currentMode === 'single' ? (
+                                <div style={{
+                                    padding: '20px',
+                                    borderRadius: '12px',
+                                    backgroundColor: '#f8fafc',
+                                    border: '1px solid #e2e8f0',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '24px',
+                                    flexWrap: 'wrap'
+                                }}>
+                                    {aboutBanner?.image && (
+                                        <div style={{
+                                            width: '120px',
+                                            height: '90px',
+                                            borderRadius: '8px',
+                                            overflow: 'hidden',
+                                            border: '1px solid #cbd5e1',
+                                            background: '#fff',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            flexShrink: 0
+                                        }}>
+                                            <img 
+                                                src={`${IMG.banners}/${aboutBanner.image}`} 
+                                                alt="Current Single Banner" 
+                                                style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} 
+                                            />
+                                        </div>
+                                    )}
+                                    <div style={{ flex: 1, minWidth: '220px' }}>
+                                        <h4 style={{ margin: '0 0 6px 0', fontSize: '14px', fontWeight: '700', color: '#1e293b' }}>
+                                            Current Banner Image
+                                        </h4>
+                                        <p style={{ margin: '0 0 12px 0', fontSize: '12px', color: '#64748b' }}>
+                                            Upload a new image to replace current banner:
+                                        </p>
+                                        <input 
+                                            type="file" 
+                                            accept="image/*" 
+                                            disabled={aboutUpdating}
+                                            onChange={(e) => e.target.files?.[0] && handleQuickUploadSingle(aboutBanner, e.target.files[0])}
+                                            style={{ fontSize: '12px', maxWidth: '320px' }} 
+                                        />
+                                    </div>
+                                </div>
+                            ) : (
+                                <div style={{
+                                    padding: '20px',
+                                    borderRadius: '12px',
+                                    backgroundColor: '#f8fafc',
+                                    border: '1px solid #e2e8f0'
+                                }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                                        <div>
+                                            <h4 style={{ margin: '0 0 4px 0', fontSize: '14px', fontWeight: '700', color: '#1e293b' }}>
+                                                Manage Multiple Image Slots
+                                            </h4>
+                                            <p style={{ margin: 0, fontSize: '12px', color: '#64748b' }}>
+                                                Upload individual images for this section. Click "Choose File" on any slot to replace that photo.
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    <div style={{
+                                        display: 'grid',
+                                        gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+                                        gap: '14px'
+                                    }}>
+                                        {slotLabels.map((slot, idx) => {
+                                            const existingSlot = clusterImages[idx] || {};
+                                            const slotSrc = existingSlot.image 
+                                                ? (existingSlot.image.startsWith('http') || existingSlot.image.startsWith('/')
+                                                    ? existingSlot.image
+                                                    : `${IMG.banners}/${existingSlot.image}`)
+                                                : null;
+
+                                            return (
+                                                <div 
+                                                    key={idx}
+                                                    style={{
+                                                        padding: '14px',
+                                                        borderRadius: '10px',
+                                                        backgroundColor: '#ffffff',
+                                                        border: '1px solid #e2e8f0',
+                                                        display: 'flex',
+                                                        flexDirection: 'column',
+                                                        gap: '10px'
+                                                    }}
+                                                >
+                                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                                        <div>
+                                                            <div style={{ fontSize: '13px', fontWeight: '700', color: '#0f172a' }}>
+                                                                {slot.title}
+                                                            </div>
+                                                            <div style={{ fontSize: '11px', color: '#64748b' }}>
+                                                                {slot.sub}
+                                                            </div>
+                                                        </div>
+                                                        {slotSrc && (
+                                                            <div style={{
+                                                                width: '32px',
+                                                                height: '32px',
+                                                                
+                                                                overflow: 'hidden',
+                                                                borderRadius: '4px',
+                                                                border: '2px solid #2563eb',
+                                                                flexShrink: 0
+                                                            }}>
+                                                                <img 
+                                                                    src={slotSrc} 
+                                                                    alt={slot.title} 
+                                                                    style={{ width: '100%', height: '100%', objectFit: 'cover',  }} 
+                                                                />
+                                                            </div>
+                                                        )}
+                                                    </div>
+
+                                                    <div>
+                                                        <label style={{ display: 'block', fontSize: '11px', fontWeight: '600', color: '#475569', marginBottom: '4px' }}>
+                                                            Replace Image:
+                                                        </label>
+                                                        <input 
+                                                            type="file" 
+                                                            accept="image/*" 
+                                                            disabled={aboutUpdating}
+                                                            onChange={(e) => e.target.files?.[0] && handleQuickUploadSlot(aboutBanner, idx, e.target.files[0])}
+                                                            style={{ fontSize: '11px', width: '100%' }} 
+                                                        />
+                                                    </div>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                );
+            })()}
 
             {selectedTab === 'about' && displayList.length === 0 && (
                 <div style={{

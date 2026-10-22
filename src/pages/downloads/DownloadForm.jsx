@@ -111,9 +111,22 @@ const DownloadForm = () => {
                 <div style={{ width: '100%', maxWidth: '600px' }}>
                     <FormCard title="Download Information">
                         
-                        <FormInput label="Title" name="title" value={formData.title} onChange={handleChange} required />
-                        <FormInput label="Type (e.g. PDF, Document)" name="type" value={formData.type} onChange={handleChange} />
-                        <FormTextarea label="Summary" name="summary" value={formData.summary} onChange={handleChange} rows="2" />
+                        <FormSelect label="Select Product" name="productId" value={formData.productId} onChange={handleChange} required>
+                            <option value="">-- Choose Product --</option>
+                            {products.map(p => (
+                                <option key={p.id} value={p.id}>{p.title}</option>
+                            ))}
+                        </FormSelect>
+
+                        <div style={{ marginBottom: '16px' }}>
+                            <div style={{ display: 'flex', gap: '8px', marginBottom: '8px', flexWrap: 'wrap' }}>
+                                <span style={{ fontSize: '12px', color: '#6b7280', alignSelf: 'center' }}>Quick Presets:</span>
+                                <button type="button" onClick={() => setFormData(prev => ({ ...prev, title: 'Product Catalog' }))} style={{ fontSize: '12px', padding: '3px 8px', borderRadius: '4px', border: '1px solid #d1d5db', background: '#f9fafb', cursor: 'pointer' }}>📋 Product Catalog</button>
+                                <button type="button" onClick={() => setFormData(prev => ({ ...prev, title: 'User Manual' }))} style={{ fontSize: '12px', padding: '3px 8px', borderRadius: '4px', border: '1px solid #d1d5db', background: '#f9fafb', cursor: 'pointer' }}>📖 User Manual</button>
+                                <button type="button" onClick={() => setFormData(prev => ({ ...prev, title: 'Technical Specifications' }))} style={{ fontSize: '12px', padding: '3px 8px', borderRadius: '4px', border: '1px solid #d1d5db', background: '#f9fafb', cursor: 'pointer' }}>⚙️ Technical Specs</button>
+                            </div>
+                            <FormInput label="Title" name="title" value={formData.title} onChange={handleChange} required placeholder="e.g. Product Catalog, User Manual..." />
+                        </div>
                         
                         <label style={{ display: 'block', marginBottom: '8px', fontWeight: '500', fontSize: '13px', color: '#4b5563' }}>Upload File</label>
                         <div style={{ border: '2px dashed #e5e7eb', borderRadius: '12px', padding: '16px', textAlign: 'center', backgroundColor: '#f9fafb', marginBottom: '16px' }}>
