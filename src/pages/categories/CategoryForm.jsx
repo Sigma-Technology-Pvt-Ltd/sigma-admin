@@ -165,11 +165,13 @@ const CategoryForm = () => {
                                 onChange={handleChange}
                             >
                                 <option value="">-- Main Parent Category (No Parent) --</option>
-                                {categories.filter(c => !c.parentCategory).map(cat => (
-                                    <option key={cat.id} value={cat.id}>
-                                        {cat.title}
-                                    </option>
-                                ))}
+                                {categories
+                                    .filter(c => !id || Number(c.id) !== Number(id))
+                                    .map(cat => (
+                                        <option key={cat.id} value={cat.id}>
+                                            {cat.parentCategory ? `— Sub: ${cat.title}` : cat.title}
+                                        </option>
+                                    ))}
                             </FormSelect>
 
                             <FormSelect label="Status" name="status" value={formData.status} onChange={handleChange}>
